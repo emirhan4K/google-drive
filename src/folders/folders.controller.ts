@@ -7,6 +7,8 @@ import {
   Delete,
   UseGuards,
   Req,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { FoldersService } from './folders.service';
 import { CreateFolderDto } from './dto/create-folder-dto';
@@ -22,6 +24,15 @@ export class FoldersController {
   createFolder(@Body() createFolderDto: CreateFolderDto, @Req() req: any) {
     const ownerId = req.user.id;
     return this.foldersService.createFolder(createFolderDto, ownerId);
+  }
+
+  @Get()
+  getFolders(
+    @Req() req: any, 
+    @Query('parentId') parentId?: string 
+  ) {
+    const ownerId = req.user.id;
+    return this.foldersService.getFolders(ownerId, parentId);
   }
 
   @UseGuards(JwtAuthGuard)
