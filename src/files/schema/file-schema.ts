@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class FileSchema extends Document {
+export class File extends Document {
   @Prop({ required: true, trim: true })
   originalName: string;
 
@@ -29,3 +29,5 @@ export class FileSchema extends Document {
   })
   folderId: mongoose.Schema.Types.ObjectId;
 }
+
+export const FileSchema = SchemaFactory.createForClass(File);
