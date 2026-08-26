@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path'; 
@@ -50,6 +50,15 @@ export class FilesController {
   ){
     const ownerId = req.user.id;
     return this.filesService.renameFile(fileId,newName,ownerId)
+  }
+
+  @Delete(':id')
+  deleteFile(
+    @Param('id') fileId:string,
+    @Req() req:any,
+  ){
+    const ownerId = req.user.id;
+    return this.filesService.deleteFile(fileId,ownerId)
   }
 
 }
