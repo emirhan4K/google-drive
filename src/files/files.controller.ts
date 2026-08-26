@@ -5,7 +5,8 @@ import { extname } from 'path';
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards'; 
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
-
+import { Public } from 'src/auth/decorators/public.decorator';
+import type { Response } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @Controller('files')
@@ -44,10 +45,11 @@ export class FilesController {
     return this.filesService.getFiles(ownerId,folderId)
   }
 
+  @Public()
   @Get('share/:token')
   async getShareDownloadInfo(
     @Param('token') shareToken:string,
-    @Res() res:any
+    @Res() res:Response
   ){
    const fileData = await this.filesService.getShareDownloadInfo(shareToken);
     res.download(fileData.filePath, fileData.originalName)
@@ -57,7 +59,7 @@ export class FilesController {
   async getDownloadInfo(
     @Param('id') fileId:string,
     @Req() req:any,
-    @Res() res:any,
+    @Res() res:Response,
   ){
     const ownerId = req.user.id;
     const fileData = await this.filesService.getDownloadInfo(fileId,ownerId);
