@@ -28,6 +28,12 @@ export class File extends Document {
     default: null,
   })
   folderId: mongoose.Schema.Types.ObjectId;
+
+  @Prop({default:false})
+  isPublic:boolean
+
+  @Prop({default:null})
+  shareToken:string
 }
 
 export const FileSchema = SchemaFactory.createForClass(File);
