@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param, Delete, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path'; 
@@ -42,6 +42,17 @@ export class FilesController {
     return this.filesService.getFiles(ownerId,folderId)
   }
 
+  @Get('download/:id')
+  async getDownloadInfo(
+    @Param('id') fileId:string,
+    @Req() req:any,
+    @Res() res:any,
+  ){
+    const ownerId = req.user.id;
+    const fileData = await this.filesService.getDownloadInfo(fileId,ownerId);
+    res.download(fileData.filePath, fileData.originalName)
+  }
+
   @Patch(':id')
   renameFile(
     @Param('id') fileId:string,
@@ -60,5 +71,7 @@ export class FilesController {
     const ownerId = req.user.id;
     return this.filesService.deleteFile(fileId,ownerId)
   }
+
+
 
 }

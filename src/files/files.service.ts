@@ -59,4 +59,20 @@ export class FilesService {
     fs.unlinkSync(filePath);  //Dosyayı kalıcı olarak siler ve silinene kadar kodu burada durdurur.
     return {message:"Dosya başarıyla silindi."}
   }
+  async getDownloadInfo(fileId:string,ownerId:string){
+    const file = await this.fileModel.findOne(
+      {
+        _id:fileId,
+        ownerId:ownerId
+      }
+    )
+    if(!file){
+      throw new NotFoundException('Dosya bulunamadı!')
+    }
+    const filePath = path.join(process.cwd(),'uploads', file.fileName)
+    return{
+      filePath,
+      originalName:file.originalName
+    }
+  }
 }
