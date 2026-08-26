@@ -4,6 +4,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path'; 
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards'; 
+import { UpdatePrivacyDto } from './dto/update-privacy.dto';
+
 
 @UseGuards(JwtAuthGuard)
 @Controller('files')
@@ -42,6 +44,15 @@ export class FilesController {
     return this.filesService.getFiles(ownerId,folderId)
   }
 
+  @Get('share/:token')
+  getShareDownloadInfo(
+    @Param('token') shareToken:string,
+    @Res() res:any
+  ){
+    this.filesService.getShareDownloadInfo(shareToken);
+    res.download()
+  }
+
   @Get('download/:id')
   async getDownloadInfo(
     @Param('id') fileId:string,
@@ -61,6 +72,16 @@ export class FilesController {
   ){
     const ownerId = req.user.id;
     return this.filesService.renameFile(fileId,newName,ownerId)
+  }
+
+  @Patch(':id/privacy')
+  updatePrivacy(
+    @Param('id') fileId:string,
+    @Body() updatePrivacyDto:UpdatePrivacyDto,
+    @Req() req:any
+  ){
+    const ownerId = req.user.id;
+    return this.filesService.updatePrivacy(fileId,updatePrivacyDto,ownerId)
   }
 
   @Delete(':id')

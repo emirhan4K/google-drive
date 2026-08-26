@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as fs from 'fs'; //Bilgisayardaki dosyalara müdahale etmesini sağlar
 import * as path from 'path';
+import { UpdatePrivacyDto } from './dto/update-privacy.dto';
+import * as crypto from 'crypto'; //verileri şifreleme, imzalama ve güvenli rastgele değerler üretir
 
 @Injectable()
 export class FilesService {
@@ -74,5 +76,24 @@ export class FilesService {
       filePath,
       originalName:file.originalName
     }
+  }
+  async updatePrivacy(fileId:string,updatePrivacyDto:UpdatePrivacyDto,ownerId:string){
+    const newShareToken = updatePrivacyDto.isPublic ? crypto.randomUUID() : null;
+    const privacy = await this.fileModel.findOneAndUpdate(
+      {
+        _id:fileId,
+        ownerId,
+      },
+      {
+        isPublic: updatePrivacyDto.isPublic,
+        shareToken:newShareToken
+      },
+      {new:true}
+      
+    )
+    if(!privacy){
+      throw new NotFoundException('Dosya bulunamadı!')
+    }
+    return privacy;
   }
 }
