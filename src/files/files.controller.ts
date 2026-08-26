@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path'; 
@@ -41,4 +41,15 @@ export class FilesController {
     const ownerId = req.user.id;
     return this.filesService.getFiles(ownerId,folderId)
   }
+
+  @Patch(':id')
+  renameFile(
+    @Param('id') fileId:string,
+    @Body('newName') newName:string,
+    @Req() req:any,
+  ){
+    const ownerId = req.user.id;
+    return this.filesService.renameFile(fileId,newName,ownerId)
+  }
+
 }

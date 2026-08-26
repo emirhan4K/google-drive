@@ -27,4 +27,20 @@ export class FilesService {
   
   return files;
 }
+  async renameFile(fileId:string, newName:string, ownerId:string){
+    const rename = await this.fileModel.findOneAndUpdate(
+      {
+        _id:fileId,
+        ownerId:ownerId
+      },
+      {
+        originalName:newName,
+      },
+     {new:true} 
+)
+  if(!rename){
+    throw new NotFoundException('Dosya bulunamadı veya bu işlem için yetkiniz yok!')
+  }
+  return rename;
+  }
 }
