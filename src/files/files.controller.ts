@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path'; 
@@ -31,5 +31,14 @@ export class FilesController {
 
     const ownerId = req.user.id;
     return this.filesService.createFile(file, folderId, ownerId);
+  }
+
+  @Get()
+  getFiles(
+    @Req() req:any,
+  @Query('folderId')folderId? : string
+  ){
+    const ownerId = req.user.id;
+    return this.filesService.getFiles(ownerId,folderId)
   }
 }

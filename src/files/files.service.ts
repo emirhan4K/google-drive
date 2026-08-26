@@ -19,4 +19,12 @@ export class FilesService {
     });
     return newFile;
   }
+  async getFiles(ownerId: string, folderId?: string) {
+  const files = await this.fileModel.find({
+    ownerId: ownerId,
+    folderId: folderId || null, 
+  });
+  
+  return files;
+}
 }

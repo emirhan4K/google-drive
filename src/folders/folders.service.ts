@@ -61,19 +61,11 @@ export class FoldersService {
     return {message:"Klasör başarıyla silindi."}
   }
  async getFolders(ownerId: string, parentId?: string) {
-    if (parentId) {
-      const folders = await this.folderModel.find({
-        ownerId: ownerId, 
-        parentId: parentId, 
-      });
-      return folders;
-    } else {
-      const folders = await this.folderModel.find({
-        ownerId: ownerId, 
-        parentId: null,
-      });
-      return folders;
-    }
-  }
+  const folders = await this.folderModel.find({
+    ownerId: ownerId,
+    parentId: parentId || null, 
+  });
+  return folders;
+}
 
 }
