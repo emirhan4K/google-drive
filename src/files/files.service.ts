@@ -96,4 +96,7 @@ export class FilesService {
     }
     return privacy;
   }
+  async getShareDownloadInfo(shareToken:string){
+    
+  }
 }

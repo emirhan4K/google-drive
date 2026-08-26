@@ -45,12 +45,12 @@ export class FilesController {
   }
 
   @Get('share/:token')
-  getShareDownloadInfo(
+  async getShareDownloadInfo(
     @Param('token') shareToken:string,
     @Res() res:any
   ){
-    this.filesService.getShareDownloadInfo(shareToken);
-    res.download()
+   const fileData = await this.filesService.getShareDownloadInfo(shareToken);
+    res.download(fileData.filePath, fileData.originalName)
   }
 
   @Get('download/:id')
