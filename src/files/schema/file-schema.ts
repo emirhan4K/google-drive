@@ -20,7 +20,7 @@ export class File extends Document {
     ref: 'User',
     required: true,
   })
-  ownerId: mongoose.Types.ObjectId;
+  ownerId: mongoose.Schema.Types.ObjectId;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
