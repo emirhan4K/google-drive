@@ -96,18 +96,5 @@ export class FilesService {
     }
     return privacy;
   }
-  async getShareDownloadInfo(shareToken:string){
-    const fileData = await this.fileModel.findOne({
-      shareToken,
-      isPublic:true
-    })
-    if(!fileData){
-      throw new NotFoundException('Dosya bulunamadı!')
-    }
-    const filePath = path.join(process.cwd(),'uploads',fileData.fileName)
-    return{
-      filePath:filePath,
-      originalName:fileData.originalName
-    }
-  }
+ 
 }
