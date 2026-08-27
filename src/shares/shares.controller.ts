@@ -26,8 +26,7 @@ export class SharesController {
       @Body() createSharesDto:CreateSharesDto,
     ){
       const ownerId = req.user.id;
-      const fileId = createSharesDto
-      return this.sharesService.postSharesLink(ownerId,fileId)
+      return this.sharesService.postSharesLink(ownerId,createSharesDto)
     }
 
     @Get()
