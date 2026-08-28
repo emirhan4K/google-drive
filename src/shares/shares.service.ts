@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import * as path from 'path';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -24,6 +24,14 @@ export class SharesService {
         'Bu indirme bağlantısı geçersiz veya süresi dolmuş!',
       );
     }
+    if(shareRecord.expiresAt && shareRecord.expiresAt < new Date()){
+      throw new ForbiddenException('Bu paylaşım linkinin süresi dolmuş!')
+    }
+    if(shareRecord.maxDownloads > 0 && shareRecord.downloadCount >= shareRecord.maxDownloads){
+      throw new ForbiddenException('Bu dosya maksimum indirme limitine ulaşmış!')
+    }
+    shareRecord.downloadCount += 1;
+    await shareRecord.save();
     const fileData = shareRecord.fileId;
     const filePath = path.join(process.cwd(), 'uploads', fileData.fileName);
     return {
@@ -45,5 +53,25 @@ export class SharesService {
       shareUrl: `http://localhost:3000/shares/${shareToken}`,
       details: sharesCreate,
     };
+  }
+  async getSharesMyLink(ownerId:string){
+    const getMyLink = await this.sharesModel.find({ownerId}).populate('fileId')
+    return getMyLink;
+  }
+  async cancelMyLink(shareId:string,ownerId:string){
+    const cancel = await this.sharesModel.findOneAndUpdate(
+      {
+      _id:shareId,
+      ownerId,
+    },
+    {
+      isActive:false,
+    },
+    { new: true } 
+  )
+  if(!cancel){
+    throw new NotFoundException('Link bulunamadı veya yetkisiz erişim!')
+  }
+  return {message:'Link başarıyla iptal edildi',cancel}
   }
 }
