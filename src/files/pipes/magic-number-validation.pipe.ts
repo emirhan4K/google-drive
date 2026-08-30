@@ -13,8 +13,8 @@ export class MagicNumberValidationPipe implements PipeTransform {
     const allowedExtensions = ['jpg', 'png', 'pdf']; //Sisteme yüklemesine izin verilen dosya uzantıları
     
     if (!fileInfo || !allowedExtensions.includes(fileInfo.ext)) { // Dosya türü tespit edilmesiyse ve uzantısı listede yoksa 
-        if(fs.existsSync(file.path)){
-            fs.unlinkSync(file.path)
+        if(fs.existsSync(file.path)){ //Uzantısından dosyayı bul
+            fs.unlinkSync(file.path) //SİL
         }
       throw new BadRequestException(`Geçersiz veya zararlı dosya türü! (Tespit edilen: ${fileInfo?.ext || 'Bilinmiyor'})`);
     }
