@@ -6,6 +6,7 @@ import { FilesService } from './files.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards'; 
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import type { Response } from 'express';
+import { MagicNumberValidationPipe } from './pipes/magic-number-validation.pipe';
 
 @UseGuards(JwtAuthGuard)
 @Controller('files')
@@ -26,7 +27,7 @@ export class FilesController {
     }),
   )
   uploadFile(
-    @UploadedFile() file: Express.Multer.File, 
+    @UploadedFile(new MagicNumberValidationPipe()) file: Express.Multer.File,
     @Body('folderId') folderId: string, 
     @Req() req: any, 
   ) {
