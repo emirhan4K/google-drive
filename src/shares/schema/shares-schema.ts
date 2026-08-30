@@ -8,14 +8,14 @@ export class Shares extends Document{
         type:mongoose.Schema.Types.ObjectId,
         ref:'File'
     })
-    fileId:mongoose.Schema.Types.ObjectId;
+    fileId:string;
 
     @Prop({
         required:true,
         type:mongoose.Schema.Types.ObjectId,
         ref:'User'
     })
-    ownerId:mongoose.Schema.Types.ObjectId;
+    ownerId:string
 
     @Prop({
         required:true,

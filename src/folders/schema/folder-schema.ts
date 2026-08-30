@@ -12,14 +12,14 @@ export class Folder extends Document{
         ref:"User",
         required:true,
     })
-    ownerId:mongoose.Types.ObjectId;
+    ownerId:string;
     
     @Prop({
         type:mongoose.Schema.Types.ObjectId,
         ref:"Folder",
         default: null,
     })
-    parentId: mongoose.Schema.Types.ObjectId;
+    parentId: string;
 
 }
 

@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1'); //
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, //Sadece dto olanlara izin verir
     forbidNonWhitelisted: true, //Dto olmayan veri gelirse anında hata fırlatır.

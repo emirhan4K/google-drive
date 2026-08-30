@@ -20,14 +20,14 @@ export class File extends Document {
     ref: 'User',
     required: true,
   })
-  ownerId: mongoose.Schema.Types.ObjectId;
+  ownerId: string
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Folder',
     default: null,
   })
-  folderId: mongoose.Schema.Types.ObjectId;
+  folderId: string
 
   @Prop({default:false})
   isPublic:boolean

@@ -5,12 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
-import { User, UserSchema } from '../users/schema/user.schema'
+import { UserSchema } from '../users/schema/user.schema'
 import { MailService } from './mail/mail.service';
+import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';
 
 @Module({
   imports: [
-   MongooseModule.forFeature([{name:User.name,schema:UserSchema}]),
+   MongooseModule.forFeature([{name:USERS_TOKEN_CONSTANTS,schema:UserSchema}]),
    JwtModule.register(
     {
         secret:process.env.JWT_SECRET,

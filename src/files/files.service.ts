@@ -5,12 +5,14 @@ import * as fs from 'fs'; //Bilgisayardaki dosyalara müdahale etmesini sağlar
 import * as path from 'path';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import * as crypto from 'crypto'; //verileri şifreleme, imzalama ve güvenli rastgele değerler üretir
+import { FILES_TOKEN_CONSTANTS } from 'src/config/db.constants';
+import { File } from './schema/file-schema';
 
 @Injectable()
 export class FilesService {
   constructor(
-    @InjectModel('File') 
-    private fileModel: Model<any>,
+    @InjectModel(FILES_TOKEN_CONSTANTS) 
+    private fileModel: Model<File>,
   ) {}
   async createFile(file: Express.Multer.File, folderId: string, ownerId: string) {
     const newFile = await this.fileModel.create({
@@ -19,14 +21,14 @@ export class FilesService {
       mimeType: file.mimetype,    
       size: file.size,
       ownerId: ownerId,       
-      folderId: folderId || null,
+      folderId: folderId || undefined,
     });
     return newFile;
   }
   async getFiles(ownerId: string, folderId?: string) {
   const files = await this.fileModel.find({
     ownerId: ownerId,
-    folderId: folderId || null, 
+    folderId: folderId || (null as any),
   });
   
   return files;

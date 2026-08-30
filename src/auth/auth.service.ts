@@ -14,12 +14,14 @@ import { ForgotPasswordDto } from './dto/forgot-password-dto';
 import { ResetPasswordDto } from './dto/reset-password-dto';
 import { VerifyEmailDto } from './dto/verify-email-dto';
 import { MailService } from './mail/mail.service';
+import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';  
+import { User } from 'src/users/schema/user.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel('User')
-    private userModel: Model<any>,
+    @InjectModel(USERS_TOKEN_CONSTANTS)
+    private userModel: Model<User>,
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}

@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateFolderDto } from './dto/create-folder-dto';
 import { UpdateFolderDto } from './dto/update-folder-dto';
+import { FOLDER_TOKEN_CONSTANTS } from 'src/config/db.constants';
+import { Folder } from './schema/folder-schema';
 
 @Injectable()
 export class FoldersService {
   constructor(
-    @InjectModel('Folder')
-    private folderModel: Model<any>,
+    @InjectModel(FOLDER_TOKEN_CONSTANTS)
+    private folderModel: Model<Folder>,
   ) {}
 
   async createFolder(createFolderDto: CreateFolderDto, ownerId: string) {

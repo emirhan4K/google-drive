@@ -19,13 +19,16 @@ export class User extends Document{
     isVerified: boolean;
 
     @Prop()
-    verificationCode: string;
+    verificationCode?: string;
 
     @Prop()
-    resetPasswordCode : string;
+    verificationExpires?: Date;
 
     @Prop()
-    resetPasswordExpires : Date;
+    resetPasswordCode? : string;
+
+    @Prop()
+    resetPasswordExpires? : Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

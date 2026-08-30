@@ -6,12 +6,14 @@ import { CreateSharesDto } from './dto/create-shares.dto';
 import * as crypto from 'crypto';
 import * as fs from 'fs'
 import { StreamableFile } from '@nestjs/common';
+import { SHARES_TOKEN_CONSTANTS } from 'src/config/db.constants';
+import { Shares } from './schema/shares-schema';
 
 @Injectable()
 export class SharesService {
   constructor(
-    @InjectModel('Shares')
-    private sharesModel: Model<any>,
+    @InjectModel(SHARES_TOKEN_CONSTANTS)
+    private sharesModel: Model<Shares>,
   ) {}
 
   async getShareDownloadInfo(token: string) {
@@ -35,7 +37,7 @@ export class SharesService {
     shareRecord.downloadCount += 1;
     await shareRecord.save();
     // Dosyanın sunucudaki tam yolunu bulduk
-    const fileData = shareRecord.fileId;
+    const fileData = shareRecord.fileId as any;
     const filePath = path.join(process.cwd(), 'uploads', fileData.fileName);
     const fileStream =  fs.createReadStream(filePath) //Streami oluşturuyoruz
     return {
