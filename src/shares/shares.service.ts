@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateSharesDto } from './dto/create-shares.dto';
 import * as crypto from 'crypto';
+import * as fs from 'fs'
+import { StreamableFile } from '@nestjs/common';
 
 @Injectable()
 export class SharesService {
@@ -32,12 +34,15 @@ export class SharesService {
     }
     shareRecord.downloadCount += 1;
     await shareRecord.save();
+    // Dosyanın sunucudaki tam yolunu bulduk
     const fileData = shareRecord.fileId;
     const filePath = path.join(process.cwd(), 'uploads', fileData.fileName);
+    const fileStream =  fs.createReadStream(filePath) //Streami oluşturuyoruz
     return {
-      filePath: filePath,
-      originalName: fileData.originalName,
-    };
+      file: new StreamableFile(fileStream), //StreamableFile Saf Node.jsin, NestJS'in anlayabileceği 
+    // ve web tarayıcısına bağlayabileceği güvenli bir kılıfa sokuyoruz.
+      originalName:fileData.originalName
+    }
   }
   async postSharesLink(ownerId: string, createSharesDto: CreateSharesDto) {
     const shareToken = crypto.randomUUID();

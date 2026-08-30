@@ -14,10 +14,17 @@ export class SharesController {
     @Get(':token')
     async getShareDownloadInfo(
       @Param('token') shareToken:string,
-      @Res() res:Response
+      @Res({ passthrough: true }) res: Response //header koymak için 
     ){
-     const fileData = await this.sharesService.getShareDownloadInfo(shareToken);
-      res.download(fileData.filePath, fileData.originalName)
+     const { file, originalName } = await this.sharesService.getShareDownloadInfo(shareToken); 
+     //Tarayıcıya kargoları yolluyoruz   
+    res.send({
+      'Content-Type': 'application/octet-stream', // Bu bir dosyadır ekranda açma, indirmeye başla
+      //Content-Disposition: "Dosyayı yeni sekmede değil, cihazın indirmeler klasörüne (attachment) indir.
+      // İnerken de kullanıcının gördüğü isim bu (originalName) olsun."
+      'Content-Disposition': `attachment; filename="${originalName}"`,
+    })
+    return file
     }
     
     @Post()
