@@ -6,9 +6,16 @@ import { UsersModule } from './users/users.module';
 import { FoldersModule } from './folders/folders.module';
 import { FilesModule } from './files/files.module';
 import { SharesModule } from './shares/shares.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports:[
+    BullModule.forRoot({
+      connection:{
+        host:'localhost',
+        port:6379
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true, //ConfigModule global yapıyoruz her yerden erişebilmek için
     }),

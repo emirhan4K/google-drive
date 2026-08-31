@@ -7,12 +7,15 @@ import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import * as crypto from 'crypto'; //verileri şifreleme, imzalama ve güvenli rastgele değerler üretir
 import { FILES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { File } from './schema/file-schema';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class FilesService {
   constructor(
     @InjectModel(FILES_TOKEN_CONSTANTS) 
     private fileModel: Model<File>,
+    @InjectQueue('file-optimization') private optimizationQueue:Queue, //Benim sipariş vereceğim panonun adı bu, bana o panonun yetkilerini ver
   ) {}
   async createFile(file: Express.Multer.File, folderId: string, ownerId: string) {
     const newFile = await this.fileModel.create({
@@ -23,6 +26,11 @@ export class FilesService {
       ownerId: ownerId,       
       folderId: folderId || undefined,
     });
+    await this.optimizationQueue.add('optimize-image',{ //Redise veri yazma işlemi : ilk parametre işin adı , ikinci parametre data kısmı aşçıya bırakılanlar
+      fileId:newFile._id,
+      fileName:newFile.fileName,
+      message:"Bu dosyanın önizlemesini oluştur ve sıkıştır"
+    })
     return newFile;
   }
   async getFiles(ownerId: string, folderId?: string) {
