@@ -5,7 +5,7 @@ import { FilesController } from './files.controller';
 import {  FileSchema } from './schema/file-schema';
 import { FILES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { BullModule } from '@nestjs/bullmq';
-import { FilesProcessor } from './processors/file-optimization.processor';
+import { FileOptimizationProcessor } from './processors/file-optimization.processor';
 
 @Module({
   imports:[
@@ -15,6 +15,6 @@ import { FilesProcessor } from './processors/file-optimization.processor';
     MongooseModule.forFeature([{name:FILES_TOKEN_CONSTANTS,schema:FileSchema}])
   ],
   controllers: [FilesController],
-  providers: [FilesService,FilesProcessor],
+  providers: [FilesService,FileOptimizationProcessor],
 })
 export class FilesModule {}
