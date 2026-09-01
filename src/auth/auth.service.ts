@@ -44,17 +44,22 @@ export class AuthService {
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
+    await this.redisClient.set(
+      `verify:${registerDto.email}`,
+      verificationCode,
+      'EX',
+      900,
+    );
+    await this.emailQueue.add('send-verification-email', {
+      email: registerDto.email,
+      code: verificationCode,
+    });
     const newUser = new this.userModel({
       name: registerDto.name,
       email: registerDto.email,
       password: hashedPassword,
-      verificationCode: verificationCode,
     });
     await newUser.save();
-    await this.mailService.sendVerificationEmail(
-      registerDto.email,
-      verificationCode,
-    );
     return {
       message:
         'Kayıt başarılı. Lütfen e-postanıza gönderilen kod ile hesabınızı doğrulayın.',
@@ -109,20 +114,19 @@ export class AuthService {
     await this.redisClient.del(`otp:${resetPasswordDto.email}`) //Redisten kodu sil
     return {message:"Şifreniz başarıyla değiştirildi."}
   }
-  async verifyEmail(verifyEmailDto: VerifyEmailDto){
-     const user = await this.userModel.findOne({
-      email:verifyEmailDto.email,
-      verificationCode:verifyEmailDto.code,
-      verificationExpires: { $gt: new Date() }
-    })
+ async verifyEmail(verifyEmailDto: VerifyEmailDto){
+    const redisCode = await this.redisClient.get(`verify:${verifyEmailDto.email}`);
+    if(!redisCode || redisCode !== verifyEmailDto.code){
+      throw new BadRequestException("Geçersiz veya süresi dolmuş kod!");
+    }
+    const user = await this.userModel.findOne({ email: verifyEmailDto.email });
     if(!user){
-      throw new BadRequestException("Geçersiz veya süresi dolmuş kod!")
+      throw new BadRequestException("Kullanıcı bulunamadı!");
     }
     user.isVerified = true;
-    user.verificationCode = undefined;
-    user.verificationExpires = undefined;
     await user.save();
-    return {message:"Hesabınız başarıyla doğrulandı."}
+    await this.redisClient.del(`verify:${verifyEmailDto.email}`);
+    return { message:"Hesabınız başarıyla doğrulandı." };
   }
   async logout(token:string){
     try {

@@ -17,18 +17,6 @@ export class User extends Document{
 
     @Prop({default: false})
     isVerified: boolean;
-
-    @Prop()
-    verificationCode?: string;
-
-    @Prop()
-    verificationExpires?: Date;
-
-    @Prop()
-    resetPasswordCode? : string;
-
-    @Prop()
-    resetPasswordExpires? : Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

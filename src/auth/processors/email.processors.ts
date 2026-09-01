@@ -18,6 +18,10 @@ export class EmailProcessor extends WorkerHost {
             await this.mailService.sendPasswordResetEmail(job.data.email, job.data.code);
             this.logger.log(`Postacı işi bitirdi! Mail gönderildi: ${job.data.email}`);
         }
+        if(job.name === 'send-verification-email'){
+            await this.mailService.sendVerificationEmail(job.data.email, job.data.code);
+            this.logger.log(`Postacı işi bitirdi! Mail gönderildi: ${job.data.email}`);
+        }
         return { success: true };
     } catch (error) {
         this.logger.error(`Mail gönderilirken hata oluştu: ${error.message}`);
