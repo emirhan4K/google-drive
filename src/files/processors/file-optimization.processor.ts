@@ -22,14 +22,14 @@ export class FileOptimizationProcessor extends WorkerHost { //Sınıfına miras 
         const ext = path.extname(job.data.fileName) //Dosyanın uzantısını al 
         const baseName = path.basename(job.data.fileName,ext) //Dosyanın saf adını alır
         const thumbFileName = `${baseName}-thumb${ext}`; //Yeni bir dosya ürettik 'örnek-thumb.jpg'
-        const thumbFilePath = path.join(process.cwd(), 'uploads', thumbFileName); //Oluşturulan Resim
+        const thumbFilePath = path.join(process.cwd(), 'uploads', thumbFileName); //Oluşturulan Resimin kaydedileceği yer 
 
         await sharp(originalFilePath) //Orjinal resmi RAM'e alır
         .resize(300,300,{fit:'inside'}) //Resmi 300x300 yap ve kalitesini bozma 
         .toFile(thumbFilePath) //Sıkıştırılan resmi yeni ürettiğimiz isimle kaydeder.
     } catch (error) {
         this.logger.log(`Uyarı: Bu dosya bir resim değil veya işlenemedi (${job.data.fileName})`);
+        return { success: false, reason:'Fotoğraf yüklenemedi!' };
     }
-    return { success: false, reason:'Fotoğraf yüklenemedi!' };
   }
 }
