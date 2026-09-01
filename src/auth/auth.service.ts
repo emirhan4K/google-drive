@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -16,11 +17,13 @@ import { VerifyEmailDto } from './dto/verify-email-dto';
 import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';  
 import { User } from 'src/users/schema/user.schema';
+import {Redis} from 'ioredis';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(USERS_TOKEN_CONSTANTS)
+    @Inject('REDIS_CLIENT') private readonly redisClient:Redis,
     private userModel: Model<User>,
     private jwtService: JwtService,
     private mailService: MailService,
@@ -116,5 +119,24 @@ export class AuthService {
     user.verificationExpires = undefined;
     await user.save();
     return {message:"Hesabınız başarıyla doğrulandı."}
+  }
+  async logout(token:string){
+    try {
+      const decoded = this.jwtService.decode(token) as any; //tokenın şifresini doğrulamadan sadece içindekileri okuyoruz
+      if(decoded && decoded.exp){ //Eğer okunabilen bir token varsa ve bitiş tarihi (exp) bulunuyorsa 
+        const expiresInSeconds = decoded.exp - Math.floor(Date.now() / 1000); //Tokenın bitiş zamanından şuan ki saniyeyi çıkarıp tokenın kalan süresini buluyoruz.
+        if(expiresInSeconds > 0) { //tokenın süresi bitmemişse Redise yazıyoru 
+          await this.redisClient.set( //Redise bağlan ve yaz
+            `blacklist:${token}`, //ANAHTAR : Başına blacklist etiketi koy ve token'ı ekle 
+            'true', //DEĞER: İçeriğine true (evet) iptal edildi yazıyoruz
+            'EX', //SİHİRLİ KOMUT: (Expire) bu kaydı sonsuza kadar tutma süresi var
+            expiresInSeconds //SÜRE: Kalan ömrü kadar saniye tut ve sonra kendini imha et!
+          )
+        }
+      }
+      return { message: 'Başarıyla çıkış yapıldı ve oturum sonlandırıldı.' };
+    } catch (error) {
+      throw new UnauthorizedException('Geçersiz token!');
+    }
   }
 }
