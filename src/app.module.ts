@@ -7,9 +7,11 @@ import { FoldersModule } from './folders/folders.module';
 import { FilesModule } from './files/files.module';
 import { SharesModule } from './shares/shares.module';
 import { BullModule } from '@nestjs/bullmq';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports:[
+    RedisModule,
     BullModule.forRoot({
       connection:{
         host:'localhost',
