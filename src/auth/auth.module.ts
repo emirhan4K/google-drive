@@ -8,9 +8,14 @@ import { JwtStrategy } from './jwt.strategy';
 import { UserSchema } from '../users/schema/user.schema'
 import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';
+import { BullModule } from '@nestjs/bullmq';
+import { EmailProcessor } from './processors/email.processors';
 
 @Module({
   imports: [
+    BullModule.registerQueue({
+      name: 'email-queue',
+    }),
    MongooseModule.forFeature([{name:USERS_TOKEN_CONSTANTS,schema:UserSchema}]),
    JwtModule.register(
     {
@@ -21,7 +26,7 @@ import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';
    PassportModule.register({defaultStrategy:'jwt'})
   ],
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy,MailService],
+  providers: [AuthService,JwtStrategy,MailService,EmailProcessor],
   exports:[JwtStrategy,PassportModule],
 })
 export class AuthModule {}

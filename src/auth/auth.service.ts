@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from './dto/register-dto';
@@ -18,13 +17,15 @@ import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';  
 import { User } from 'src/users/schema/user.schema';
 import {Redis} from 'ioredis';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(USERS_TOKEN_CONSTANTS)
+    @InjectModel(USERS_TOKEN_CONSTANTS) private userModel: Model<User>,
     @Inject('REDIS_CLIENT') private readonly redisClient:Redis,
-    private userModel: Model<User>,
+    @InjectQueue('email-queue') private readonly emailQueue: Queue,
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}
@@ -74,36 +75,39 @@ export class AuthService {
   }
   async forgotPassword(forgotPasswordDto:ForgotPasswordDto){
     const user = await this.userModel.findOne({email:forgotPasswordDto.email})
-    if(!user){
-      throw new NotFoundException("Böyle bir kullanıcı bulunamadı!")
+    if (!user) {
+      return { message: 'Sıfırlama kodu gönderilmiştir.'};
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expireDate = new Date(Date.now() + 15 * 60 * 1000)
-
-    user.resetPasswordCode = resetCode;
-    user.resetPasswordExpires = expireDate;
-    await user.save();
-    await this.mailService.sendPasswordResetEmail(forgotPasswordDto.email,resetCode )
-    return {message : 'Şifre sıfırlama kodu başarıyla e-postanıza gönderildi.'};  
+    await this.redisClient.set(
+      `otp:${forgotPasswordDto.email}`, //ANAHTAR: Başına otp etiketi koy ve e-posta adresini ekle
+      resetCode, //DEĞER: İçeriğine oluşturulan kodu ekle
+      'EX', //SİHİRLİ KOMUT: (Expire) bu kaydı sonsuza kadar tutma süresi var
+      900 //SÜRE: 15 dakika (900 saniye) boyunca geçerli olacak
+    );
+    await this.emailQueue.add('send-password-reset',{
+      email: forgotPasswordDto.email,
+      code: resetCode
+    })
+    return { message: 'Şifre sıfırlama kodu başarıyla e-postanıza gönderildi.' }; 
   }
   async resetPassword(resetPasswordDto:ResetPasswordDto){
     if(resetPasswordDto.newPassword != resetPasswordDto.newPasswordConfirm){
       throw new BadRequestException("Şifreler birbiriyle eşleşmiyor!")
     }
-    const user = await this.userModel.findOne({
-      email:resetPasswordDto.email,
-      resetPasswordCode:resetPasswordDto.code,
-      resetPasswordExpires:{$gt: new Date()}
-    })
-    if(!user){
-     throw new BadRequestException("Geçersiz veya süresi dolmuş kod!")
+    const redisCode = await this.redisClient.get(`otp:${resetPasswordDto.email}`) //Redisten kodu oku
+    if(!redisCode || redisCode !== resetPasswordDto.code){ //Eğer kod yoksa veya girilen kod ile eşleşmiyorsa
+      throw new BadRequestException("Geçersiz veya süresi dolmuş kod!")
+    }
+    const user = await this.userModel.findOne({ email: resetPasswordDto.email });
+    if (!user) {
+      throw new BadRequestException("Kullanıcı bulunamadı!");
     }
     const newHashPassword = await bcrypt.hash(resetPasswordDto.newPassword,10)
     user.password = newHashPassword;
-    user.resetPasswordCode = undefined;
-    user.resetPasswordExpires = undefined;
     await user.save();
-    return {message: "Şifreniz başarıyla değiştirildi."}
+    await this.redisClient.del(`otp:${resetPasswordDto.email}`) //Redisten kodu sil
+    return {message:"Şifreniz başarıyla değiştirildi."}
   }
   async verifyEmail(verifyEmailDto: VerifyEmailDto){
      const user = await this.userModel.findOne({

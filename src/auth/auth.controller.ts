@@ -22,18 +22,18 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  forgotPassword(@Body() forgotPasswordDto:ForgotPasswordDto){
-    return this.authService.forgotPassword(forgotPasswordDto)
+  async forgotPassword(@Body() forgotPasswordDto:ForgotPasswordDto){
+    return await this.authService.forgotPassword(forgotPasswordDto)
   }
 
   @Post('reset-password')
-  resetPassword(@Body() resetPasswordDto:ResetPasswordDto){
-    return this.authService.resetPassword(resetPasswordDto)
+  async resetPassword(@Body() resetPasswordDto:ResetPasswordDto){
+    return await this.authService.resetPassword(resetPasswordDto)
   }
 
   @Post('verify-email')
-  verifyEmail(@Body() verifyEmailDto:VerifyEmailDto){
-    return this.authService.verifyEmail(verifyEmailDto)
+  async verifyEmail(@Body() verifyEmailDto:VerifyEmailDto){
+    return await this.authService.verifyEmail(verifyEmailDto)
   }
 
   @UseGuards(JwtAuthGuard)
