@@ -9,6 +9,7 @@ import { SharesModule } from './shares/shares.module';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CleanupService } from './cron/cleanup.service';
 
 @Module({
   imports:[
@@ -33,6 +34,6 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
     AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule],
   controllers: [],
-  providers: [],
+  providers: [CleanupService],
 })
 export class AppModule {}
