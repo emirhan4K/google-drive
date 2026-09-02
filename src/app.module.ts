@@ -8,9 +8,11 @@ import { FilesModule } from './files/files.module';
 import { SharesModule } from './shares/shares.module';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisModule } from './redis/redis.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports:[
+    ScheduleModule.forRoot(),
     RedisModule,
     BullModule.forRoot({
       connection:{
