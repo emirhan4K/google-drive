@@ -9,7 +9,7 @@ import { SharesModule } from './shares/shares.module';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CleanupService } from './cron/cleanup.service';
+import { CleanupService } from './shares/cron/cleanup.service';
 
 @Module({
   imports:[
