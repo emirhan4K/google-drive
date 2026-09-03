@@ -4,8 +4,8 @@ import { Job } from 'bullmq';
 import { MailService } from '../mail/mail.service';
 
 @Processor('email-queue') 
-export class EmailProcessor extends WorkerHost {
-  private readonly logger = new Logger(EmailProcessor.name);
+export class EmailWorker extends WorkerHost {
+  private readonly logger = new Logger(EmailWorker.name);
 
   constructor(private readonly mailService: MailService) {
     super(); //WorkerHost sınıfının başlatıcısını çağırıyoruz hata almamak için

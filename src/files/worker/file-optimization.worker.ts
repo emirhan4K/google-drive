@@ -7,8 +7,8 @@ import * as fs from 'fs';
 
 // Bu sınıfın 'file-optimization' panosundan sorumlu olduğunu belirtiyoruz
 @Processor('file-optimization')
-export class FileOptimizationProcessor extends WorkerHost { //Sınıfına miras verip "İşlem yarıda kesilirse tekrar dene" diyoruz
-  private readonly logger = new Logger(FileOptimizationProcessor.name); //Terminale mesaj basarken başına sarı renkli etiket koyar ve hangi workerdan geldiğini anlar
+export class FileOptimizationWorker extends WorkerHost { //Sınıfına miras verip "İşlem yarıda kesilirse tekrar dene" diyoruz
+  private readonly logger = new Logger(FileOptimizationWorker.name); //Terminale mesaj basarken başına sarı renkli etiket koyar ve hangi workerdan geldiğini anlar
 
   async process(job: Job<any>) { //Redisten çekilen fişin job üzerinden almamızı sağlar ve işler çalıştırır(process)
     this.logger.log(`Aşçı işe başladı! Dosya: ${job.data.fileName}`);

@@ -9,7 +9,7 @@ import { UserSchema } from '../users/schema/user.schema'
 import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { BullModule } from '@nestjs/bullmq';
-import { EmailProcessor } from './processors/email.processors';
+import { EmailWorker } from './worker/email.worker';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { EmailProcessor } from './processors/email.processors';
    PassportModule.register({defaultStrategy:'jwt'})
   ],
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy,MailService,EmailProcessor],
+  providers: [AuthService,JwtStrategy,MailService,EmailWorker],
   exports:[JwtStrategy,PassportModule],
 })
 export class AuthModule {}
