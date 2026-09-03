@@ -12,7 +12,7 @@ export class CleanupService {
   private readonly logger = new Logger('GeceBekcisi');
 constructor(
     @InjectModel(SHARES_TOKEN_CONSTANTS) private sharesModel: Model<Shares>,
-    @InjectQueue('clean-queue') private readonly cleanQueue:Queue
+    @InjectQueue('cleanup-queue') private readonly cleanQueue:Queue
 ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)

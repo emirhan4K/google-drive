@@ -1,5 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import  Redis from 'ioredis';
 
 @Global() // @Global yapıyoruz ki her modülde tek tek import etmek zorunda kalmayalım
 @Module({

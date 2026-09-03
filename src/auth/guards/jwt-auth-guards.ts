@@ -8,7 +8,7 @@ import {Redis} from "ioredis";
 export class JwtAuthGuard extends AuthGuard('jwt'){
     constructor(
         private reflector:Reflector,
-        @Inject('REDIS-CLIENT') private readonly redisClient: Redis
+        @Inject('REDIS_CLIENT') private readonly redisClient: Redis
     ) {
         super();
     }

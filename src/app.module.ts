@@ -9,7 +9,6 @@ import { SharesModule } from './shares/shares.module';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CleanupService } from './shares/cron/cleanup.service';
 import { ThrottlerModule,ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -40,9 +39,11 @@ import { APP_GUARD } from '@nestjs/core';
       }),
     AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule],
   controllers: [],
-  providers: [CleanupService,{
+  providers: [
+    {
     provide: APP_GUARD, //Tüm projedeki api isteklerini sınırlamak için APP_GUARD kullanıyoruz
     useClass: ThrottlerGuard,
-  }],
+  }
+],
 })
 export class AppModule {}
