@@ -10,9 +10,15 @@ import { BullModule } from '@nestjs/bullmq';
 import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CleanupService } from './shares/cron/cleanup.service';
+import { ThrottlerModule,ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports:[
+    ThrottlerModule.forRoot([{
+      ttl:60000 , // 1 dakika
+      limit:10 // 1 dakika içinde 10 istek
+    }]),
     ScheduleModule.forRoot(),
     RedisModule,
     BullModule.forRoot({
@@ -34,6 +40,9 @@ import { CleanupService } from './shares/cron/cleanup.service';
       }),
     AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule],
   controllers: [],
-  providers: [CleanupService],
+  providers: [CleanupService,{
+    provide: APP_GUARD, //Tüm projedeki api isteklerini sınırlamak için APP_GUARD kullanıyoruz
+    useClass: ThrottlerGuard,
+  }],
 })
 export class AppModule {}
