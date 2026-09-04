@@ -36,7 +36,7 @@ export class File extends Document {
   shareToken:string
 
   @Prop({default:false})
-  isDelete:boolean
+  isDeleted:boolean
 
   @Prop({type:Date,default:null})
   deleteAt:Date

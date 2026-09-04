@@ -38,6 +38,7 @@ export class FilesService {
   const files = await this.fileModel.find({
     ownerId: ownerId,
     folderId: folderId || (null as any),
+    isDelete:false
   });
   
   return files;
@@ -59,17 +60,21 @@ export class FilesService {
   return rename;
   }
   async deleteFile(fileId:string, ownerId:string){
-    const deleted = await this.fileModel.findOneAndDelete(
+    const deleted = await this.fileModel.findOneAndUpdate(
       {
         _id:fileId,
-        ownerId:ownerId
-      }
+        ownerId:ownerId,
+        isDelete:false
+      },
+      {
+        isDeleted:true,
+        deleteAt:new Date()
+      },
+      {new:true}
     )
     if(!deleted){
       throw new NotFoundException('Dosya bulunamadı!')
     }
-    const filePath = path.join(process.cwd(),'uploads',deleted.fileName) //Projenin çalıştığı klasörü bul ve işletim sistemine uygun yolları birbirine ekle
-    fs.unlinkSync(filePath);  //Dosyayı kalıcı olarak siler ve silinene kadar kodu burada durdurur.
     return {message:"Dosya başarıyla silindi."}
   }
   async getDownloadInfo(fileId:string,ownerId:string){
@@ -111,5 +116,54 @@ export class FilesService {
     }
     return privacy;
   }
- 
+  async cleanExpiredTrash(){
+    //Şuanki tarihten 30 gün öncesi
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const expiredFiles = await this.fileModel.find({
+      isDeleted:true,
+      deleteAt:{$lt:thirtyDaysAgo} //30 gün öncesinden daha eski olan dosyaları bul
+    })
+    if(expiredFiles.length === 0){
+      return {message:"Silinmesi gereken dosya yok!"}
+    }
+    //Bulunan her dosyayı diskten ve veritabanından sil
+    for(const file of expiredFiles){
+      const filePath = path.join(process.cwd(),'uploads',file.fileName)
+      if(fs.existsSync(filePath)){ //Dosya diste duruyorsa
+        fs.unlinkSync(filePath) //Dosyayı sil
+      }
+      await this.fileModel.deleteOne({_id:file._id}) //Veritabanından sil
+    } 
+    return {message:`${expiredFiles.length} adet dosya başarıyla silindi!`}
+  } 
+  async getTrashFiles(ownerId:string){
+    const trashFiles = await this.fileModel.find({
+      ownerId,
+      isDeleted:true
+    })
+    return trashFiles;
+  }
+  async restoreFile(fileId:string,ownerId:string){
+    const restored = await this.fileModel.findOneAndUpdate(
+      {
+        _id:fileId,
+        ownerId,
+        isDeleted:true
+      },
+      {
+        isDeleted:false,
+        deleteAt:null
+      },
+      {new:true}
+    )
+    if(!restored){
+      throw new NotFoundException('Dosya bulunamadı veya bu işlem için yetkiniz yok!')
+      }
+      return {
+      message: 'Dosya başarıyla çöp kutusundan geri yüklendi.',
+      file: restored,
+    };
+  }
 }

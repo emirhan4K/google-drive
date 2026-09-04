@@ -89,6 +89,20 @@ export class FilesController {
     return this.filesService.deleteFile(fileId,ownerId)
   }
 
+  @Get('trash')
+  async getTrashFiles(@Req() req:any){
+    const ownerId = req.user.id;
+    return await this.filesService.getTrashFiles(ownerId)
+  }
+
+  @Patch('restored/:id')
+  async restoreFile(
+    @Param('id') fileId:string,
+    @Req() req:any,
+  ){
+    const ownerId = req.user.id;
+    return await this.filesService.restoreFile(fileId,ownerId)
+  }
 
 
 }
