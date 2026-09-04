@@ -14,10 +14,14 @@ import { FoldersService } from './folders.service';
 import { CreateFolderDto } from './dto/create-folder-dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards';
 import { UpdateFolderDto } from './dto/update-folder-dto';
+import { ICacheService } from 'src/infrastructure/cache.service.abstract';
 
 @Controller('folders')
 export class FoldersController {
-  constructor(private readonly foldersService: FoldersService) {}
+  constructor(
+    private readonly foldersService: FoldersService,
+    private readonly cacheService: ICacheService
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()

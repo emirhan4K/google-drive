@@ -11,9 +11,11 @@ import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule,ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CacheModule } from './infrastructure/cache.module';
 
 @Module({
   imports:[
+    CacheModule,
     ThrottlerModule.forRoot([{
       ttl:60000 , // 1 dakika
       limit:10 // 1 dakika içinde 10 istek
