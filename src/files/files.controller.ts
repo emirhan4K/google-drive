@@ -49,11 +49,15 @@ export class FilesController {
   async getDownloadInfo(
     @Param('id') fileId:string,
     @Req() req:any,
-    @Res() res:Response,
+    @Res({ passthrough: true }) res:Response,
   ){
-    const ownerId = req.user.id;
+    const ownerId = req.user.sub || req.user.id;
     const fileData = await this.filesService.getDownloadInfo(fileId,ownerId);
-    res.download(fileData.filePath, fileData.originalName)
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${fileData.originalName}"`,
+    });
+    return fileData.file;
   }
 
   @Patch(':id')

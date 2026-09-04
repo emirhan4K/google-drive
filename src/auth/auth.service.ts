@@ -13,21 +13,19 @@ import * as bcrypt from 'bcrypt';
 import { ForgotPasswordDto } from './dto/forgot-password-dto';
 import { ResetPasswordDto } from './dto/reset-password-dto';
 import { VerifyEmailDto } from './dto/verify-email-dto';
-import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';  
 import { User } from 'src/users/schema/user.schema';
-import {Redis} from 'ioredis';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { ICacheService } from 'src/infrastructure/cache.service.abstract';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(USERS_TOKEN_CONSTANTS) private userModel: Model<User>,
-    @Inject('REDIS_CLIENT') private readonly redisClient:Redis,
+    private readonly cacheService : ICacheService,
     @InjectQueue('email-queue') private readonly emailQueue: Queue,
     private jwtService: JwtService,
-    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -44,10 +42,9 @@ export class AuthService {
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
-    await this.redisClient.set(
+    await this.cacheService.set(
       `verify:${registerDto.email}`,
       verificationCode,
-      'EX',
       900,
     );
     await this.emailQueue.add('send-verification-email', {
@@ -84,10 +81,9 @@ export class AuthService {
       return { message: 'Sıfırlama kodu gönderilmiştir.'};
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    await this.redisClient.set(
+    await this.cacheService.set(
       `otp:${forgotPasswordDto.email}`, //ANAHTAR: Başına otp etiketi koy ve e-posta adresini ekle
       resetCode, //DEĞER: İçeriğine oluşturulan kodu ekle
-      'EX', //SİHİRLİ KOMUT: (Expire) bu kaydı sonsuza kadar tutma süresi var
       900 //SÜRE: 15 dakika (900 saniye) boyunca geçerli olacak
     );
     await this.emailQueue.add('send-password-reset',{
@@ -100,7 +96,7 @@ export class AuthService {
     if(resetPasswordDto.newPassword != resetPasswordDto.newPasswordConfirm){
       throw new BadRequestException("Şifreler birbiriyle eşleşmiyor!")
     }
-    const redisCode = await this.redisClient.get(`otp:${resetPasswordDto.email}`) //Redisten kodu oku
+    const redisCode = await this.cacheService.get(`otp:${resetPasswordDto.email}`) //Redisten kodu oku
     if(!redisCode || redisCode !== resetPasswordDto.code){ //Eğer kod yoksa veya girilen kod ile eşleşmiyorsa
       throw new BadRequestException("Geçersiz veya süresi dolmuş kod!")
     }
@@ -111,11 +107,11 @@ export class AuthService {
     const newHashPassword = await bcrypt.hash(resetPasswordDto.newPassword,10)
     user.password = newHashPassword;
     await user.save();
-    await this.redisClient.del(`otp:${resetPasswordDto.email}`) //Redisten kodu sil
+    await this.cacheService.delete(`otp:${resetPasswordDto.email}`) //Redisten kodu sil
     return {message:"Şifreniz başarıyla değiştirildi."}
   }
  async verifyEmail(verifyEmailDto: VerifyEmailDto){
-    const redisCode = await this.redisClient.get(`verify:${verifyEmailDto.email}`);
+    const redisCode = await this.cacheService.get(`verify:${verifyEmailDto.email}`);
     if(!redisCode || redisCode !== verifyEmailDto.code){
       throw new BadRequestException("Geçersiz veya süresi dolmuş kod!");
     }
@@ -125,7 +121,7 @@ export class AuthService {
     }
     user.isVerified = true;
     await user.save();
-    await this.redisClient.del(`verify:${verifyEmailDto.email}`);
+    await this.cacheService.delete(`verify:${verifyEmailDto.email}`);
     return { message:"Hesabınız başarıyla doğrulandı." };
   }
   async logout(token:string){
@@ -134,10 +130,9 @@ export class AuthService {
       if(decoded && decoded.exp){ //Eğer okunabilen bir token varsa ve bitiş tarihi (exp) bulunuyorsa 
         const expiresInSeconds = decoded.exp - Math.floor(Date.now() / 1000); //Tokenın bitiş zamanından şuan ki saniyeyi çıkarıp tokenın kalan süresini buluyoruz.
         if(expiresInSeconds > 0) { //tokenın süresi bitmemişse Redise yazıyoru 
-          await this.redisClient.set( //Redise bağlan ve yaz
+          await this.cacheService.set( //Redise bağlan ve yaz
             `blacklist:${token}`, //ANAHTAR : Başına blacklist etiketi koy ve token'ı ekle 
-            'true', //DEĞER: İçeriğine true (evet) iptal edildi yazıyoruz
-            'EX', //SİHİRLİ KOMUT: (Expire) bu kaydı sonsuza kadar tutma süresi var
+            'true', //DEĞER: İçeriğine true (evet) iptal edildi yazıyoruz 
             expiresInSeconds //SÜRE: Kalan ömrü kadar saniye tut ve sonra kendini imha et!
           )
         }

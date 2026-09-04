@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as fs from 'fs'; //Bilgisayardaki dosyalara müdahale etmesini sağlar
@@ -9,6 +9,7 @@ import { FILES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { File } from './schema/file-schema';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { StreamableFile } from '@nestjs/common';
 
 @Injectable()
 export class FilesService {
@@ -82,9 +83,13 @@ export class FilesService {
       throw new NotFoundException('Dosya bulunamadı!')
     }
     const filePath = path.join(process.cwd(),'uploads', file.fileName)
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException('Dosya veritabanında var ama fiziksel olarak sunucuda bulunamadı!');
+    }
+    const fileStream = fs.createReadStream(filePath);
     return{
-      filePath,
-      originalName:file.originalName
+      file: new StreamableFile(fileStream), 
+      originalName: file.originalName,
     }
   }
   async updatePrivacy(fileId:string,updatePrivacyDto:UpdatePrivacyDto,ownerId:string){
