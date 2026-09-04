@@ -104,5 +104,13 @@ export class FilesController {
     return await this.filesService.restoreFile(fileId,ownerId)
   }
 
+  @Delete('trash/:id')
+  async permanentDeleteFile(
+    @Param('id') fileId: string,
+    @Req() req: any,
+  ) {
+    const ownerId = req.user.sub || req.user.id;
+    return await this.filesService.permanentDeleteFile(fileId, ownerId);
+  }
 
 }

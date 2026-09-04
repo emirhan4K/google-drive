@@ -166,4 +166,20 @@ export class FilesService {
       file: restored,
     };
   }
+  async permanentDeleteFile(fileId:string,ownerId:string){
+    const file = await this.fileModel.findOne({
+      _id:fileId,
+      ownerId,
+      isDeleted:true
+    });
+    if(!file){
+      throw new NotFoundException('Dosya bulunamadı veya bu işlem için yetkiniz yok!')
+    }
+    const filePath = path.join(process.cwd(),'uploads',file.fileName)
+    if(fs.existsSync(filePath)){
+      fs.unlinkSync(filePath)
+    }
+    await this.fileModel.deleteOne({_id:fileId})
+    return {message:"Dosya kalıcı olarak silindi!"}
+  }
 }
