@@ -10,15 +10,26 @@ import { File } from './schema/file-schema';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { StreamableFile } from '@nestjs/common';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class FilesService {
   constructor(
     @InjectModel(FILES_TOKEN_CONSTANTS) 
     private fileModel: Model<File>,
-    @InjectQueue('file-optimization') private optimizationQueue:Queue, //Benim sipariş vereceğim panonun adı bu, bana o panonun yetkilerini ver
+    @InjectQueue('file-optimization') private optimizationQueue:Queue,
+    private storageService : StorageService,
   ) {}
   async createFile(file: Express.Multer.File, folderId: string, ownerId: string) {
+    try {
+      await this.storageService.checkQuota(ownerId,file.size)
+    } catch (error) {
+      const filePath = path.join(process.cwd(), 'uploads', file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      throw error; 
+    }
     const newFile = await this.fileModel.create({
       originalName: file.originalname, 
       fileName: file.filename,       
@@ -32,6 +43,7 @@ export class FilesService {
       fileName:newFile.fileName,
       message:"Bu dosyanın önizlemesini oluştur ve sıkıştır"
     })
+    await this.storageService.updateUsedSpace(ownerId,file.size)
     return newFile;
   }
   async getFiles(ownerId: string, folderId?: string) {
@@ -175,11 +187,13 @@ export class FilesService {
     if(!file){
       throw new NotFoundException('Dosya bulunamadı veya bu işlem için yetkiniz yok!')
     }
+    const fileSize = file.size;
     const filePath = path.join(process.cwd(),'uploads',file.fileName)
     if(fs.existsSync(filePath)){
       fs.unlinkSync(filePath)
     }
     await this.fileModel.deleteOne({_id:fileId})
+    await this.storageService.updateUsedSpace(ownerId, -fileSize); //Silinen dosyanın boyutunu azaltıyoruz
     return {message:"Dosya kalıcı olarak silindi!"}
   }
 }

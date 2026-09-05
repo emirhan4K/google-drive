@@ -8,9 +8,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { FileOptimizationWorker } from './worker/file-optimization.worker';
 import { TrashCleanupCron } from './cron/trash-cleanup.cron';
 import { FileDeletedWorker } from './worker/file-deleted.worker';
+import { StorageModule } from 'src/storage/storage.module';
 
 @Module({
   imports:[
+    StorageModule,
     BullModule.registerQueue({
       name:'file-optimization'
     }),

@@ -10,9 +10,11 @@ import { MailService } from './mail/mail.service';
 import { USERS_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { BullModule } from '@nestjs/bullmq';
 import { EmailWorker } from './worker/email.worker';
+import { StorageModule } from 'src/storage/storage.module';
 
 @Module({
   imports: [
+    StorageModule,
     BullModule.registerQueue({
       name: 'email-queue',
     }),

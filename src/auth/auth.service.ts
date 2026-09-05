@@ -18,6 +18,7 @@ import { User } from 'src/users/schema/user.schema';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { ICacheService } from 'src/infrastructure/cache.service.abstract';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly cacheService : ICacheService,
     @InjectQueue('email-queue') private readonly emailQueue: Queue,
     private jwtService: JwtService,
+    private storageService: StorageService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -57,6 +59,7 @@ export class AuthService {
       password: hashedPassword,
     });
     await newUser.save();
+    await this.storageService.initializeStorage(newUser._id.toString())
     return {
       message:
         'Kayıt başarılı. Lütfen e-postanıza gönderilen kod ile hesabınızı doğrulayın.',
