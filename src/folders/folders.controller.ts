@@ -57,4 +57,12 @@ export class FoldersController {
     return this.foldersService.deleteFolder(folderId,ownerId)
   }
 
+  @Get(':id/size')
+  async getFolderSizeDetails(
+    @Param('id') folderId:string,
+    @Req() req:any,
+  ){
+    const userId = req.user.sub || req.user.id;
+    return await this.foldersService.getFolderSizeDetails(folderId, userId);
+  }
 }

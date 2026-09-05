@@ -20,5 +20,6 @@ import { StorageModule } from 'src/storage/storage.module';
   ],
   controllers: [FilesController],
   providers: [FilesService,FileOptimizationWorker,TrashCleanupCron,FileDeletedWorker],
+  exports:[FilesService]
 })
 export class FilesModule {}

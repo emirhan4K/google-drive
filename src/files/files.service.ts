@@ -11,6 +11,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { StreamableFile } from '@nestjs/common';
 import { StorageService } from 'src/storage/storage.service';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class FilesService {
@@ -195,5 +196,30 @@ export class FilesService {
     await this.fileModel.deleteOne({_id:fileId})
     await this.storageService.updateUsedSpace(ownerId, -fileSize); //Silinen dosyanın boyutunu azaltıyoruz
     return {message:"Dosya kalıcı olarak silindi!"}
+  }
+  async getFolderSize(folderId:string,ownerId:string){
+    const result = await this.fileModel.aggregate([ //aggregate: Kendi içine bir array alır
+      {
+        $match: { //Filtreleme
+          folderId: new Types.ObjectId(folderId), //Sadece bu klasöre ait dosyaları bul
+          ownerId: new Types.ObjectId(ownerId), //Sadece bu kullanıcıya ait olan dosyaları bul
+          isDeleted: { $ne: true } //Silinenleri alma 
+        }
+      },
+      {
+        $group: { //Matematiksel İşlem
+          _id: null, //Hepsini tek bir grupa birleştir
+          totalSize: { $sum: '$size' }, //totalSize adında bir alan oluştur ve size değerlerini ($num )topla
+          fileCount: { $sum: 1 } //fileCount adında bir alan oluştur ve banttan geçen her dosya için 1 ekle 
+        }
+      }
+    ]);
+    if (result.length > 0) {
+      return {
+        totalSize: result[0].totalSize,
+        fileCount: result[0].fileCount
+      };
+    }
+    return { folderId,totalSizeBytes: 0, fileCount: 0 };
   }
 }

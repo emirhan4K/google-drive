@@ -6,12 +6,14 @@ import { UpdateFolderDto } from './dto/update-folder-dto';
 import { FOLDER_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { Folder } from './schema/folder-schema';
 import { ICacheService } from 'src/infrastructure/cache.service.abstract';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class FoldersService {
   constructor(
     @InjectModel(FOLDER_TOKEN_CONSTANTS)  private folderModel: Model<Folder>,
     private readonly cacheService: ICacheService,
+    private readonly filesService : FilesService
   ) {}
 
   async createFolder(createFolderDto: CreateFolderDto, ownerId: string) {
@@ -45,6 +47,30 @@ export class FoldersService {
   });
   await this.cacheService.set(cacheKey, folders,60); // Sonuçları cache'e kaydet ve 60 saniye boyunca sakla
   return folders;
+}
+  async getFolderSizeDetails(folderId:string,ownerId:string){
+    const cacheKey = `folder-size:${ownerId}:${folderId}`;
+    const cachedSize = await this.cacheService.get(cacheKey);
+    if(cachedSize){
+      return cachedSize;
+    }
+    const folder = await this.folderModel.findOne({
+      _id:folderId,
+      ownerId,
+    })
+    if(!folder){
+      throw new NotFoundException('Klasör bulunamadı!')
+    }
+    const sizeInfo = await this.filesService.getFolderSize(folderId,ownerId);
+    const result = {
+      folderId:folder._id,
+      folderName:folder.name,
+      totalSize:sizeInfo.totalSize,
+      fileCount:sizeInfo.fileCount,
+    };
+    await this.cacheService.set(cacheKey, result, 60);
+    return result;
+
 }
   async updateFolder(updateFolderDto: UpdateFolderDto, ownerId:string,folderId:string){
     const updated = await this.folderModel.findOneAndUpdate(
