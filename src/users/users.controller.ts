@@ -1,4 +1,4 @@
-import { Controller, Patch, UseGuards, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
+import { Controller, Patch, UseGuards, UseInterceptors, UploadedFile, Req, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { getMulterOptions } from 'src/config/multer.config'; 
 import { UsersService } from './users.service';
@@ -19,4 +19,11 @@ export class UsersController {
     const userId = req.user.sub || req.user.id;
     return await this.usersService.updateAvatar(userId, file.filename);
   }
-}
+
+  @Delete('avatar')
+  async deleteAvatar(@Req() req: any) {
+    const userId = req.user.sub || req.user.id;
+    return await this.usersService.deleteAvatar(userId);
+  }
+
+} 

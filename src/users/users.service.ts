@@ -39,5 +39,23 @@ async updateAvatar(userId:string,newAvatarName:string){
         avatar:user.avatar
     }
 }
+async deleteAvatar(userId:string){
+    const user = await this.userModel.findById(userId);
+    if(!user){
+        throw new NotFoundException('Kullanıcı bulunamadı!');
+    }
+    if(!user.avatar){
+        return { message: 'Silinecek bir profil fotoğrafı yok!' };
+    }
+    const filePath = path.join(process.cwd(), 'uploads', user.avatar);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+    user.avatar = null as any;
+    await user.save();
+    return {
+        message:'Profil fotoğrafı başarıyla kaldırıldı.',
 
+    }
+}
 }
