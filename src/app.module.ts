@@ -12,6 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule,ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from './infrastructure/cache.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports:[
@@ -39,7 +40,7 @@ import { CacheModule } from './infrastructure/cache.module';
         family:4
       }), 
       }),
-    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule],
+    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule, StorageModule],
   controllers: [],
   providers: [
     {
