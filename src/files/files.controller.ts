@@ -7,34 +7,24 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import type { Response } from 'express';
 import { MagicNumberValidationPipe } from './pipes/magic-number-validation.pipe';
+import { getMulterOptions } from 'src/config/multer.config';
 
 @UseGuards(JwtAuthGuard)
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads', //Dosyanın kaydedileceği yer 
-        filename: (req, file, callback) => {
-          const ext = extname(file.originalname); //Uzantısını kesip al
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${uniqueSuffix}${ext}`); //Parçaları birleştiriyoruz
-        },
-      }),
-    }),
-  )
-  uploadFile(
+ @Post('upload')
+  @UseInterceptors(FileInterceptor('file', getMulterOptions('file', false)))
+  async uploadFile(
     @UploadedFile(new MagicNumberValidationPipe()) file: Express.Multer.File,
     @Body('folderId') folderId: string, 
     @Req() req: any, 
   ) {
-
     const ownerId = req.user.id;
     return this.filesService.createFile(file, folderId, ownerId);
   }
+ 
 
   @Get()
   getFiles(
