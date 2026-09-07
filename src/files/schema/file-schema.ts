@@ -35,11 +35,12 @@ export class File extends Document {
   @Prop({default:null})
   shareToken:string
 
-  @Prop({default:false})
+  @Prop({type:String,default:false})
   isDeleted:boolean
 
   @Prop({type:Date,default:null})
   deleteAt:Date
+
 }
 
 export const FileSchema = SchemaFactory.createForClass(File);

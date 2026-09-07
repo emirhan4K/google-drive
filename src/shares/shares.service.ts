@@ -6,7 +6,7 @@ import { CreateSharesDto } from './dto/create-shares.dto';
 import * as crypto from 'crypto';
 import * as fs from 'fs'
 import { StreamableFile } from '@nestjs/common';
-import { SHARES_TOKEN_CONSTANTS } from 'src/config/db.constants';
+import { FILES_TOKEN_CONSTANTS, SHARES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { Shares } from './schema/shares-schema';
 
 @Injectable()
@@ -14,6 +14,8 @@ export class SharesService {
   constructor(
     @InjectModel(SHARES_TOKEN_CONSTANTS)
     private sharesModel: Model<Shares>,
+    @InjectModel(FILES_TOKEN_CONSTANTS)
+    private fileModel : Model <File>,
   ) {}
 
   async getShareDownloadInfo(token: string) {
@@ -47,6 +49,14 @@ export class SharesService {
     }
   }
   async postSharesLink(ownerId: string, createSharesDto: CreateSharesDto) {
+    const file = await this.fileModel.findOne({
+      _id:createSharesDto.fileId,
+      ownerId:ownerId,
+      isDeleted:{$ne:true} //Çöpteki dosyaya link üretmiyoruz
+    })
+    if(!file){
+      throw new NotFoundException('Dosya bulunamadı!')
+    }
     const shareToken = crypto.randomUUID();
     const sharesCreate = await this.sharesModel.create({
       fileId: createSharesDto.fileId,

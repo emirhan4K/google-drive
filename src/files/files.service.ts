@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as fs from 'fs'; //Bilgisayardaki dosyalara müdahale etmesini sağlar
+import * as fs from 'fs';
 import * as path from 'path';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import * as crypto from 'crypto'; //verileri şifreleme, imzalama ve güvenli rastgele değerler üretir
