@@ -40,6 +40,7 @@ export class Shares extends Document{
         default:true
     })
     isActive:boolean;
+
 }
 
 export const SharesSchema = SchemaFactory.createForClass(Shares)

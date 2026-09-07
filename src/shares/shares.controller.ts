@@ -18,11 +18,9 @@ export class SharesController {
     ){
      const { file, originalName } = await this.sharesService.getShareDownloadInfo(shareToken); 
      //Tarayıcıya kargoları yolluyoruz   
-    res.send({
+    res.set({
       'Content-Type': 'application/octet-stream', // Bu bir dosyadır ekranda açma, indirmeye başla
-      //Content-Disposition: "Dosyayı yeni sekmede değil, cihazın indirmeler klasörüne (attachment) indir.
-      // İnerken de kullanıcının gördüğü isim bu (originalName) olsun."
-      'Content-Disposition': `attachment; filename="${originalName}"`,
+      'Content-Disposition': `attachment; filename="${originalName}"`, //Dosyayı yeni sekmede değil indirilenler kısmında aç
     })
     return file
     }
@@ -32,7 +30,7 @@ export class SharesController {
       @Req() req:any,
       @Body() createSharesDto:CreateSharesDto,
     ){
-      const ownerId = req.user.id;
+      const ownerId = req.user.sub || req.user.id;
       return this.sharesService.postSharesLink(ownerId,createSharesDto)
     }
 
@@ -40,7 +38,7 @@ export class SharesController {
     async getSharesMyLink(
       @Req() req:any,
     ){
-      const ownerId = req.user.id;
+      const ownerId = req.user.sub || req.user.id;
       return this.sharesService.getSharesMyLink(ownerId)
     }
 
@@ -49,7 +47,7 @@ export class SharesController {
       @Param('id') shareId: string,
       @Req() req:any,
     ){
-      const ownerId = req.user.id;
+      const ownerId = req.user.sub || req.user.id;
       return this.sharesService.cancelMyLink(shareId,ownerId)
     }
 
