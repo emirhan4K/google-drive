@@ -10,6 +10,7 @@ import { Queue } from 'bullmq';
 import { StreamableFile } from '@nestjs/common';
 import { StorageService } from 'src/storage/storage.service';
 import { Types } from 'mongoose';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class FilesService {
@@ -18,6 +19,7 @@ export class FilesService {
     private fileModel: Model<File>,
     @InjectQueue('file-optimization') private optimizationQueue:Queue,
     private storageService : StorageService,
+    private eventEmitter: EventEmitter2,
   ) {}
   async createFile(file: Express.Multer.File, folderId: string, ownerId: string) {
     try {
@@ -43,6 +45,15 @@ export class FilesService {
       message:"Bu dosyanın önizlemesini oluştur ve sıkıştır"
     })
     await this.storageService.updateUsedSpace(ownerId,file.size)
+    this.eventEmitter.emit('user.action',{
+      ownerId:ownerId,
+      action:'FILE_UPLOADED',
+      details:{
+        fileName:file.originalname,
+        size:file.size,
+        mimeType:file.mimetype
+      }
+    })
     return newFile;
   }
   async getFiles(ownerId: string, folderId?: string) {
@@ -86,6 +97,14 @@ export class FilesService {
     if(!deleted){
       throw new NotFoundException('Dosya bulunamadı!')
     }
+    this.eventEmitter.emit('user.action', {
+      ownerId: ownerId,
+      action: 'FILE_TRASHED',
+      details: { 
+        fileId: fileId,
+        fileName: deleted.originalName 
+      }
+    });
     return {message:"Dosya başarıyla silindi."}
   }
   async getDownloadInfo(fileId:string,ownerId:string){

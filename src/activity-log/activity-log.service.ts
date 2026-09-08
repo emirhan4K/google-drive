@@ -12,7 +12,7 @@ export class ActivityLogService {
   ) {}
 
   @OnEvent('user.action') //user.action komutunu dinle 
-  async handleUserAction(payload: { ownerId: string; action: string; details: any }) {
+  async handleUserAction(payload: { ownerId: string; action: string; details: any }) { //payload : Paketleme işlemi 
     try {
       await this.activityLogModel.create({
         ownerId: payload.ownerId,
@@ -23,5 +23,12 @@ export class ActivityLogService {
     } catch (error) {
       console.error('[Activity Log Hata] Log yazılamadı:', error);
     }
+  }
+  async getUserActivityLogs(ownerId: string) { //Kullanıcı geçmişini getir
+    const logs = await this.activityLogModel
+      .find({ ownerId: ownerId })
+      .sort({ createdAt: -1 }) 
+      .limit(50);
+    return logs;
   }
 }
