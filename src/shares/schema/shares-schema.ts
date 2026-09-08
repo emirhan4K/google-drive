@@ -44,8 +44,8 @@ export class Shares extends Document{
     @Prop({default:false})
     isPrivate:boolean
 
-    @Prop({type:[{type: Types.ObjectId, ref:'User'}],default:[]})
-    allowedUsers:Types.ObjectId;
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+allowedUsers: Types.ObjectId[];
 }
 
 export const SharesSchema = SchemaFactory.createForClass(Shares)

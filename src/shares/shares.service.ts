@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as path from 'path';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,6 +8,7 @@ import * as fs from 'fs'
 import { StreamableFile } from '@nestjs/common';
 import { FILES_TOKEN_CONSTANTS, SHARES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { Shares } from './schema/shares-schema';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class SharesService {
@@ -16,9 +17,10 @@ export class SharesService {
     private sharesModel: Model<Shares>,
     @InjectModel(FILES_TOKEN_CONSTANTS)
     private fileModel : Model <File>,
+    private jwtService: JwtService,
   ) {}
 
-  async getShareDownloadInfo(token: string) {
+  async getShareDownloadInfo(token: string,currentUserId?:string) {
     const shareRecord = await this.sharesModel
       .findOne({
         token: token,
@@ -36,6 +38,16 @@ export class SharesService {
     if(shareRecord.maxDownloads > 0 && shareRecord.downloadCount >= shareRecord.maxDownloads){
       throw new ForbiddenException('Bu dosya maksimum indirme limitine ulaşmış!')
     }
+    if(shareRecord.isPrivate){
+      if(!currentUserId){
+        throw new UnauthorizedException('Bu gizli bir dosyadır. İndirmek için giriş yapmalısınız!')
+      }
+      const isOwner = shareRecord.ownerId.toString() === currentUserId;
+      const isAllowed = shareRecord.allowedUsers.some((allowedId)=> allowedId.toString() === currentUserId);
+      if(!isOwner && !isAllowed){
+        throw new ForbiddenException('Bu gizli dosyayı indirme veya görüntüleme yetkiniz yok!');
+      }
+    }
     shareRecord.downloadCount += 1;
     await shareRecord.save();
     // Dosyanın sunucudaki tam yolunu bulduk
@@ -44,8 +56,7 @@ export class SharesService {
     const fileStream =  fs.createReadStream(filePath) //Streami oluşturuyoruz
     return {
       file: new StreamableFile(fileStream), //StreamableFile Saf Node.jsin, NestJS'in anlayabileceği 
-    // ve web tarayıcısına bağlayabileceği güvenli bir kılıfa sokuyoruz.
-      originalName:fileData.originalName
+      originalName:fileData.originalName // ve web tarayıcısına bağlayabileceği güvenli bir kılıfa sokuyoruz.
     }
   }
   async postSharesLink(ownerId: string, createSharesDto: CreateSharesDto) {
@@ -58,12 +69,16 @@ export class SharesService {
       throw new NotFoundException('Dosya bulunamadı!')
     }
     const shareToken = crypto.randomUUID();
+    const isPrivate = createSharesDto.isPrivate || false;
+    const allowedUsers = isPrivate ? (createSharesDto.allowedUsers || []) : [];
     const sharesCreate = await this.sharesModel.create({
       fileId: createSharesDto.fileId,
       ownerId: ownerId,
       token: shareToken,
       expiresAt: createSharesDto.expiresAt,
       maxDownloads: createSharesDto.maxDownloads,
+      isPrivate:isPrivate,
+      allowedUsers:allowedUsers as any,
     });
     return {
       message: 'Linkiniz başarıyla oluşturuldu.',

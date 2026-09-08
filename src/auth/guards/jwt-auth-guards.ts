@@ -17,25 +17,27 @@ export class JwtAuthGuard extends AuthGuard('jwt'){
             context.getHandler(),//Fonksiyonlara bak
             context.getClass()//Controllera bak 
         ])
-        if (isPublic) {
-      return true;
-    }
-    //Passport kontrolü yapar ve token geçerli mi diye bakar
-    const isValid = await super.canActivate(context);
-    if (!isValid) {
-        return false;   
-    }
-
-    //Token geçerli ise, tokeni alır ve redis'te blacklistte olup olmadığını kontrol eder
-    const request = context.switchToHttp().getRequest(); //Request objesini alır
-    const token = this.extractTokenFromHeader(request); //Headerdan gelen saf tokenı alır ve token değişkenine atar
-    if (token) {
-            const isBlacklisted = await this.redisClient.get(`blacklist:${token}`);
-            if (isBlacklisted) {
-                throw new UnauthorizedException('Oturumunuz kapatılmış. Lütfen tekrar giriş yapın!');
+   try {
+            const isValid = await super.canActivate(context);    
+            if (isValid) {
+                const request = context.switchToHttp().getRequest();
+                const token = this.extractTokenFromHeader(request);
+                if (token) {
+                    const isBlacklisted = await this.redisClient.get(`blacklist:${token}`);
+                    if (isBlacklisted) {
+                        if (isPublic) return true; 
+                        throw new UnauthorizedException('Oturumunuz kapatılmış. Lütfen tekrar giriş yapın!');
+                    }
+                }
             }
+            return true; 
+            
+        } catch (error) {
+            if (isPublic) {
+                return true; 
+            }
+            throw error; 
         }
-        return true;
     }
     //Header'dan (Authorization: Bearer <token>) sadece token kısmını koparıp alan yardımcı metod.
     private extractTokenFromHeader(request: any): string | undefined { //Request objesinden tokeni alır
