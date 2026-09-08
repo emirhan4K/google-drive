@@ -17,7 +17,6 @@ export class SharesService {
     private sharesModel: Model<Shares>,
     @InjectModel(FILES_TOKEN_CONSTANTS)
     private fileModel : Model <File>,
-    private jwtService: JwtService,
   ) {}
 
   async getShareDownloadInfo(token: string,currentUserId?:string) {

@@ -1,10 +1,7 @@
 import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query, Get, Patch, Param, Delete, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path'; 
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guards'; 
-import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import type { Response } from 'express';
 import { MagicNumberValidationPipe } from './pipes/magic-number-validation.pipe';
 import { getMulterOptions } from 'src/config/multer.config';
@@ -24,7 +21,6 @@ export class FilesController {
     const ownerId = req.user.id;
     return this.filesService.createFile(file, folderId, ownerId);
   }
- 
 
   @Get()
   getFiles(
@@ -60,16 +56,6 @@ export class FilesController {
     return this.filesService.renameFile(fileId,newName,ownerId)
   }
 
-  @Patch(':id/privacy')
-  updatePrivacy(
-    @Param('id') fileId:string,
-    @Body() updatePrivacyDto:UpdatePrivacyDto,
-    @Req() req:any
-  ){
-    const ownerId = req.user.id;
-    return this.filesService.updatePrivacy(fileId,updatePrivacyDto,ownerId)
-  }
-
   @Delete(':id')
   deleteFile(
     @Param('id') fileId:string,
@@ -101,6 +87,12 @@ export class FilesController {
   ) {
     const ownerId = req.user.sub || req.user.id;
     return await this.filesService.permanentDeleteFile(fileId, ownerId);
+  }
+
+  @Delete('trash/empty')
+  async emptyTrash(@Req() req: any) {
+    const ownerId = req.user.id;
+    return await this.filesService.emptyTrash(ownerId);
   }
 
 }

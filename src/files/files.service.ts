@@ -3,8 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as fs from 'fs';
 import * as path from 'path';
-import { UpdatePrivacyDto } from './dto/update-privacy.dto';
-import * as crypto from 'crypto'; //verileri şifreleme, imzalama ve güvenli rastgele değerler üretir
 import { FILES_TOKEN_CONSTANTS } from 'src/config/db.constants';
 import { File } from './schema/file-schema';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -110,25 +108,6 @@ export class FilesService {
       originalName: file.originalName,
     }
   }
-  async updatePrivacy(fileId:string,updatePrivacyDto:UpdatePrivacyDto,ownerId:string){
-    const newShareToken = updatePrivacyDto.isPublic ? crypto.randomUUID() : null;
-    const privacy = await this.fileModel.findOneAndUpdate(
-      {
-        _id:fileId,
-        ownerId,
-      },
-      {
-        isPublic: updatePrivacyDto.isPublic,
-        shareToken:newShareToken
-      },
-      {new:true}
-      
-    )
-    if(!privacy){
-      throw new NotFoundException('Dosya bulunamadı!')
-    }
-    return privacy;
-  }
   async cleanExpiredTrash(){
     //Şuanki tarihten 30 gün öncesi
     const thirtyDaysAgo = new Date();
@@ -151,11 +130,11 @@ export class FilesService {
     } 
     return {message:`${expiredFiles.length} adet dosya başarıyla silindi!`}
   } 
-  async getTrashFiles(ownerId:string){
+  async getTrashFiles(ownerId:string){ //Çöpteki dosyaları getir
     const trashFiles = await this.fileModel.find({
       ownerId,
       isDeleted:true
-    })
+    }).sort({ updatedAt: -1 }); //En son silinen en üste çıksın
     return trashFiles;
   }
   async restoreFile(fileId:string,ownerId:string){
@@ -221,5 +200,38 @@ export class FilesService {
       };
     }
     return { folderId,totalSizeBytes: 0, fileCount: 0 };
+  }
+  async emptyTrash(ownerId:string){
+    const filesToDelete = await this.fileModel.find({
+      ownerId,
+      isDeleted:true
+    })
+    if(filesToDelete.length === 0){
+      return {message:"Çöp kutusu zaten boş!"}
+    }
+    let deletedCount = 0;
+    for(const file of filesToDelete){
+      const filePath = path.join(process.cwd(),'uploads',file.fileName);
+      try {
+        if(fs.existsSync(filePath)){
+          fs.unlinkSync(filePath)
+        }
+        deletedCount++;
+      } catch (error) {
+        console.warn(`[UYARI] Fiziksel dosya bulunamadı, atlandı: ${file.fileName}`);
+      }
+    }
+    await this.fileModel.deleteMany({
+      ownerId,
+      isDeleted: true
+    });
+    const totalSizeRecovered = filesToDelete.reduce((total, file) => total + file.size, 0);
+    if (totalSizeRecovered > 0) {
+      await this.storageService.updateUsedSpace(ownerId, -totalSizeRecovered);
+    }
+    return {
+      message: 'Çöp kutusu başarıyla boşaltıldı.',
+      summary: `${filesToDelete.length} dosya veritabanından, ${deletedCount} dosya sunucudan silindi.`,
+    };
   }
 }
