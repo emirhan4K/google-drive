@@ -13,9 +13,12 @@ import { ThrottlerModule,ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from './infrastructure/cache.module';
 import { StorageModule } from './storage/storage.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
   imports:[
+    EventEmitterModule.forRoot(),
     CacheModule,
     ThrottlerModule.forRoot([{
       ttl:60000 , // 1 dakika
@@ -40,7 +43,7 @@ import { StorageModule } from './storage/storage.module';
         family:4
       }), 
       }),
-    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule, StorageModule],
+    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule, StorageModule, ActivityLogModule],
   controllers: [],
   providers: [
     {
