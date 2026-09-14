@@ -24,7 +24,7 @@ constructor(
       expiresAt: { $lt: now }, //lt = Daha küçük olanları bul
     });
     if (expiredShares.length === 0) {
-      this.logger.debug('Her yer tertemiz, süresi dolmuş dosya yok.');
+      this.logger.debug('Her yer tertemiz, süresi dolmuş dosya yok!');
       return; 
     }
     this.logger.debug(`Tam ${expiredShares.length} tane süresi dolmuş dosya bulundu!`);
@@ -34,6 +34,6 @@ constructor(
             fileId: share.fileId, //Silinecek olan dosyanın id'si
         });
     }
-    this.logger.debug('Tüm çöpler panoya asıldı. Bekçi görevini tamamladı ve uykuya dönüyor!');
+    this.logger.debug('Tüm çöpler panoya asıldı. Bekçi görevini tamamladı ve uykuya dönüyor.');
   }
 }
