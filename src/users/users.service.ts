@@ -58,7 +58,4 @@ async deleteAvatar(userId:string){
 
     }
 }
-async bio(userId:string){
-
-}
 }
