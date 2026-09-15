@@ -15,6 +15,7 @@ import { CacheModule } from './infrastructure/cache.module';
 import { StorageModule } from './storage/storage.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ActivityLogModule } from './activity-log/activity-log.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports:[
@@ -43,7 +44,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
         family:4
       }), 
       }),
-    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule, StorageModule, ActivityLogModule],
+    AuthModule, UsersModule, FoldersModule, FilesModule, SharesModule, StorageModule, ActivityLogModule, SearchModule],
   controllers: [],
   providers: [
     {
