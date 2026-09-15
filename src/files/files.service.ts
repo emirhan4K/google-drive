@@ -11,6 +11,7 @@ import { StreamableFile } from '@nestjs/common';
 import { StorageService } from 'src/storage/storage.service';
 import { Types } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SearchService } from 'src/search/search.service';
 
 @Injectable()
 export class FilesService {
@@ -20,6 +21,7 @@ export class FilesService {
     @InjectQueue('file-optimization') private optimizationQueue:Queue,
     private storageService : StorageService,
     private eventEmitter: EventEmitter2,
+    private readonly searchService: SearchService
   ) {}
   async createFile(file: Express.Multer.File, folderId: string, ownerId: string) {
     try {
@@ -39,6 +41,12 @@ export class FilesService {
       ownerId: ownerId,       
       folderId: folderId || undefined,
     });
+    await this.searchService.addFileToIndex(
+      newFile._id.toString(),
+      newFile.originalName,
+      newFile.mimeType.split('/')[1], // /dan sonrasını alır .pdf vb
+      newFile.size
+    );
     await this.optimizationQueue.add('optimize-image',{ //Redise veri yazma işlemi : ilk parametre işin adı , ikinci parametre data kısmı aşçıya bırakılanlar
       fileId:newFile._id,
       fileName:newFile.fileName,
